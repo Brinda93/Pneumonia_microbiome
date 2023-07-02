@@ -24,8 +24,8 @@ smote_round1 <-
   DMwR::SMOTE(
     form = Condition ~ .,
     data = smote_dataset,
-    perc.over = 150,
-    perc.under = 450
+    perc.over = 450,
+    perc.under = 150
   )
 
 #run ml models
