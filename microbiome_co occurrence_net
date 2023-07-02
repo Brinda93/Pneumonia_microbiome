@@ -1,0 +1,50 @@
+#adopted from phyloseq tutorial https://vaulot.github.io/tutorials/Phyloseq_tutorial.html
+
+library("phyloseq")
+library("ggplot2")      
+library("readxl")       
+library("dplyr")       
+library("tibble")
+library("vegan")
+library("microbiome")
+library("knitr")
+
+# import the data 
+#Read the data and create phyloseq (S4) objects
+
+otu_mat<- read.csv(eta.csv")
+View(otu_mat)
+tax_mat<- read.csv("taxa.csv")
+View(tax_mat)
+samples_df <- read.csv("meta_data.csv")
+View(samples_df)
+otu_mat <- otu_mat %>%
+  tibble::column_to_rownames("otu")
+tax_mat <- tax_mat %>% 
+  tibble::column_to_rownames("otu")
+samples_df <- samples_df %>% 
+  tibble::column_to_rownames("Samples")
+otu_mat <- as.matrix(otu_mat)
+tax_mat <- as.matrix(tax_mat)
+
+OTU = otu_table(otu_mat, taxa_are_rows = TRUE)
+TAX = tax_table(tax_mat)
+samples = sample_data(samples_df)
+
+eta <- phyloseq(OTU, TAX, samples)
+eta
+
+#Normalize number of reads in each sample using median sequencing depth.
+total = median(sample_sums(eta))
+standf = function(x, t=total) round(t * (x / sum(x)))
+eta = transform_sample_counts(sta, standf)
+sample_names(eta)
+rank_names(eta)
+sample_variables(eta)
+
+#Network analysis
+eta_net = prune_taxa(names(sort(taxa_sums(eta), TRUE)), eta)
+eta_net_make = make_network(eta_net, "taxa", "bray", 0.6)
+plot_network(eta_net_make, eta_net, "taxa", color = "Phylum", line_weight = 0.6, label = NULL)
+
+
