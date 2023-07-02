@@ -2,6 +2,10 @@
 #adopted from https://cran.r-project.org/web/packages/mikropml/vignettes/introduction.html
 
 library(mikropml)
+library(caret)
+library(mlbench)
+library(DMwR2)
+
 
 #Import the data
 eta=read.csv("ETA_microbiome.csv")
@@ -13,12 +17,15 @@ otu_processed<-processed_data$dat_transformed
 View(eta_processed)
 
 #oversampling to solve the class imbalance
+
+smote_dataset <- as.data.frame(eta_processed)
+smote_dataset$Condition <- as.factor(eta_processed$Condition)
 smote_round1 <-
   DMwR::SMOTE(
     form = Condition ~ .,
-    data = eta_processed,
-    perc.over = 148,
-    perc.under = 468
+    data = smote_dataset,
+    perc.over = 150,
+    perc.under = 450
   )
 
 #run ml models
