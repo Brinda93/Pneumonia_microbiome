@@ -1,0 +1,64 @@
+#Mikropml package to perform classification tasks, specifically for distinguishing between pneumonia and non-pneumonia cases, as well as predicting the biomarker
+#adopted from https://cran.r-project.org/web/packages/mikropml/vignettes/introduction.html
+
+library(mikropml)
+
+#Import the data
+eta=read.csv("ETA_microbiome.csv")
+View(eta)
+
+#Data_preprocessing
+processed_data=preprocess_data(dataset = rta, outcome_colname = "Condition")
+otu_processed<-processed_data$dat_transformed
+View(eta_processed)
+
+#oversampling to solve the class imbalance
+smote_round1 <-
+  DMwR::SMOTE(
+    form = Condition ~ .,
+    data = eta_processed,
+    perc.over = 148,
+    perc.under = 468
+  )
+
+#run ml models
+#run Logistic regression ("glmnet")
+results_glmnet <- run_ml(eta_processed,
+                         'glmnet', outcome_colname = 'Condition',
+                         kfold = 10,
+                         cv_times = 100,
+                         training_frac = 0.75, find_feature_importance = TRUE,
+                         seed = 2019)
+
+
+Support vector machine with a radial basis kernel ("svmRadial")
+results_svm <- run_ml(eta_processed,
+                         'svmRadial', outcome_colname = 'Condition',
+                         kfold = 10,
+                         cv_times = 100,
+                         training_frac = 0.75, find_feature_importance = TRUE,
+                         seed = 2019)
+
+#run decision tree ("rpart2")
+results_dt <- run_ml(eta_processed,
+                       'rpart2', outcome_colname = 'Condition',
+                        kfold = 10,
+                        cv_times = 100,
+                        training_frac = 0.75, find_feature_importance = TRUE,
+                        seed = 2019)
+
+#run random forest ("rf")
+results_dt <- run_ml(eta_processed,
+                       'rpart2', outcome_colname = 'Condition',
+                        kfold = 10,
+                        cv_times = 100,
+                        training_frac = 0.75, find_feature_importance = TRUE,
+                        seed = 2019)
+
+#run xgboost ("xgbTree")
+results_xgboost <- run_ml(eta_processed,
+                        'xgbTree', outcome_colname = 'Condition',
+                         kfold = 10,
+                         cv_times = 100,
+                         training_frac = 0.75, find_feature_importance = TRUE,
+                         seed = 2019)
