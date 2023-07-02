@@ -1,0 +1,73 @@
+#feature selection using Random forest
+
+library(caret)
+library(mlbench)
+otu <- read.csv("otu.csv", sep = ",")
+otu=na.omit(otu)
+set.seed(123)
+
+#Oversampling
+smote_dataset <- as.data.frame(otu)
+smote_dataset$Condition <- as.factor(otu$Condition)
+
+smote_round1 <-
+  DMwR::SMOTE(
+    form = Condition ~ .,
+    data = smote_dataset,
+    perc.over = 550,
+    perc.under = 150
+  )
+
+# Split the data into training and testing sets
+trainIndex <- createDataPartition(smote_round1$Condition, p = .75, list = FALSE)
+trainData <- smote_round1[trainIndex, ]
+testData <- smote_round1[-trainIndex, ]
+
+# Preprocess the data (in this example, we'll perform normalization)
+preProc <- preProcess(trainData, method=c("center", "scale"))
+trainDataNorm <- predict(preProc, trainData)
+testDataNorm <- predict(preProc, testData)
+
+testDataNorm$Condition = as.factor(testDataNorm$Condition)
+testDataNorm=as.data.frame(testDataNorm)
+
+
+## Create Confusion Matrix
+table(testDataNorm$Condition, predict > 0.5)
+
+
+library(ROCR)
+ROCRpred <- prediction(predict, testDataNorm$Condition)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+
+
+library(randomForest)  
+library(e1071)  
+
+
+rf = randomForest(Condition~.,  
+                  ntree = 100,
+                  data = trainDataNorm)
+plot(rf)
+
+
+varImp(rf)
+
+
+varImpPlot(rf,  
+           sort = T,
+           n.var=25,
+           main="Variable Importance")
+predicted.response <- predict(rf, testDataNorm)
+
+
+confusionMatrix(data=predicted.response,  
+                reference=testDataNorm$Condition)
+library(pROC)
+auc <- roc(testDataNorm$Condition, predict)
+print(auc)
+
+plot(auc, ylim=c(0,1), print.thres=TRUE, main=paste('AUC:',round(auc$auc[[1]],2)))
+abline(h=1,col='blue',lwd=2)
+abline(h=0,col='red',lwd=2)
